@@ -59,3 +59,32 @@ export const verification = pgTable("verification", {
         () => /* @__PURE__ */ new Date(),
     ),
 });
+
+export const conversations = pgTable("conversations", {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+        .notNull()
+        .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title"),
+    model: text("model").notNull().default("gpt-4"),
+    metadata: text("metadata"), // JSON string for additional metadata
+    createdAt: timestamp("created_at")
+        .$defaultFn(() => new Date())
+        .notNull(),
+    updatedAt: timestamp("updated_at")
+        .$defaultFn(() => new Date())
+        .notNull(),
+});
+
+export const messages = pgTable("messages", {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+        .notNull()
+        .references(() => conversations.id, { onDelete: "cascade" }),
+    role: text("role").notNull(), // "user" or "assistant"
+    content: text("content").notNull(),
+    attachments: text("attachments"), // JSON string for file attachments, images, etc.
+    createdAt: timestamp("created_at")
+        .$defaultFn(() => new Date())
+        .notNull(),
+});
