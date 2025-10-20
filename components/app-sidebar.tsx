@@ -15,6 +15,7 @@ import {
   IconFolder,
   IconHelp,
   IconListDetails,
+  IconMessage,
   IconReport,
   IconSearch,
   IconSettings,
@@ -41,6 +42,11 @@ const staticData = {
       title: "Dashboard",
       url: "#",
       icon: IconDashboard,
+    },
+    {
+      title: "AI Chat",
+      url: "/dashboard/chat",
+      icon: IconMessage,
     },
     {
       title: "Lifecycle",
