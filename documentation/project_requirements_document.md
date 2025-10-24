@@ -1,117 +1,91 @@
-# Project Requirements Document: codeguide-starter
-
----
+# Project Requirements Document for Superchat-Starter
 
 ## 1. Project Overview
 
-The **codeguide-starter** project is a boilerplate web application that provides a ready-made foundation for any web project requiring secure user authentication and a post-login dashboard. It sets up the common building blocks—sign-up and sign-in pages, API routes to handle registration and login, and a simple dashboard interface driven by static data. By delivering this skeleton, it accelerates development time and ensures best practices are in place from day one.
+Superchat-Starter is the foundation for an "everything-app" AI platform, starting with a high-quality AI Chat feature. It combines user authentication, type-safe data storage, and a modern UI so you can focus on building and shipping AI-driven experiences quickly. By leveraging Next.js 15 with the App Router, TypeScript, Better Auth, Drizzle ORM, and a set of UI libraries, this codebase gives you authentication flows, a database connection, theming, and a dashboard layout out of the box.
 
-This starter kit is being built to solve the friction developers face when setting up repeated common tasks: credential handling, session management, page routing, and theming. Key objectives include: 1) delivering a fully working authentication flow (registration & login), 2) providing a gated dashboard area upon successful login, 3) establishing a clear, maintainable project structure using Next.js and TypeScript, and 4) demonstrating a clean theming approach with global and section-specific CSS. Success is measured by having an end-to-end login journey in under 200 lines of code and zero runtime type errors.
-
----
+The goal is to build an AI Chat module that lets signed-in users send messages and receive real-time, streaming replies from a chosen large language model (LLM). Success will be measured by a smooth signup and sign-in process, fast message streaming (under 500 ms per token), reliable saving of conversations, and a user interface that works on both mobile and desktop with dark mode support.
 
 ## 2. In-Scope vs. Out-of-Scope
 
 ### In-Scope (Version 1)
-- User registration (sign-up) form with validation
-- User login (sign-in) form with validation
-- Next.js API routes under `/api/auth/route.ts` handling:
-  - Credential validation
-  - Password hashing (e.g., bcrypt)
-  - Session creation or JWT issuance
-- Protected dashboard pages under `/dashboard`:
-  - `layout.tsx` wrapping dashboard content
-  - `page.tsx` rendering static data from `data.json`
-- Global application layout in `/app/layout.tsx`
-- Basic styling via `globals.css` and `dashboard/theme.css`
-- TypeScript strict mode enabled
+- Email/password signup, sign-in, and session handling using Better Auth.  
+- A PostgreSQL database via Drizzle ORM with schemas for users, chat sessions, and messages.  
+- An AI Chat page under `/dashboard/chat` that streams messages through the Vercel `@ai-sdk`.  
+- A dashboard layout with a sidebar for conversation history and a main panel for chat.  
+- Mobile-first, responsive UI built with Tailwind CSS v4 and `shadcn/ui` primitives.  
+- Dark mode toggle and basic theming.  
+- Docker and Docker Compose setup for local dev (including a Postgres container).
 
-### Out-of-Scope (Later Phases)
-- Integration with a real database (PostgreSQL, MongoDB, etc.)
-- Advanced authentication flows (password reset, email verification, MFA)
-- Role-based access control (RBAC)
-- Multi-tenant or white-label theming
-- Unit, integration, or end-to-end testing suites
-- CI/CD pipeline and production deployment scripts
-
----
+### Out-of-Scope (Future Phases)
+- AI Search and AI Image Generation features.  
+- Social logins (Google, GitHub) and advanced auth features (password resets, MFA).  
+- Background job queues for long-running tasks (e.g., high-resolution image gen).  
+- Social features (sharing, real-time collaboration).  
+- Extensive analytics or usage dashboards beyond basic metrics.
 
 ## 3. User Flow
 
-A new visitor lands on the root URL and sees a welcome page with options to **Sign Up** or **Sign In**. If they choose Sign Up, they fill in their email, password, and hit “Create Account.” The form submits to `/api/auth/route.ts`, which hashes the password, creates a new user session or token, and redirects them to the dashboard. If any input is invalid, an inline error message explains the issue (e.g., “Password too short”).
+A new user lands on the home page and clicks “Sign Up.” They enter an email and password, receive a confirmation email, and (once verified) are redirected to the dashboard. The sidebar shows “Chat” by default. When they click it, the main panel displays a text input at the bottom and a scrollable history area above.
 
-Once authenticated, the user is taken to the `/dashboard` route. Here they see a sidebar or header defined by `dashboard/layout.tsx`, and the main panel pulls in static data from `data.json`. They can log out (if that control is present), but otherwise their entire session is managed by server-side cookies or tokens. Returning users go directly to Sign In, submit credentials, and upon success they land back on `/dashboard`. Any unauthorized access to `/dashboard` redirects back to Sign In.
-
----
+The user types a question and hits send. Behind the scenes, the frontend calls `/api/chat`, passing user credentials via cookies. The server-side route uses the Vercel AI SDK to route the prompt to the chosen LLM (for example, OpenAI’s GPT-4). As tokens stream back, the chat UI displays them in real time. When the response is complete, both the user message and AI reply are saved to Postgres. The sidebar updates to list the active conversation by title or date.
 
 ## 4. Core Features
 
-- **Sign-Up Page (`/app/sign-up/page.tsx`)**: Form fields for email & password, client-side validation, POST to `/api/auth`.
-- **Sign-In Page (`/app/sign-in/page.tsx`)**: Form fields for email & password, client-side validation, POST to `/api/auth`.
-- **Authentication API (`/app/api/auth/route.ts`)**: Handles both registration and login based on HTTP method, integrates password hashing (bcrypt) and session or JWT logic.
-- **Global Layout (`/app/layout.tsx` + `globals.css`)**: Shared header, footer, and CSS resets across all pages.
-- **Dashboard Layout (`/app/dashboard/layout.tsx` + `dashboard/theme.css`)**: Sidebar or top nav for authenticated flows, section-specific styling.
-- **Dashboard Page (`/app/dashboard/page.tsx`)**: Reads `data.json`, renders it as cards or tables.
-- **Static Data Source (`/app/dashboard/data.json`)**: Example dataset to demo dynamic rendering.
-- **TypeScript Configuration**: `tsconfig.json` with strict mode and path aliases (if any).
-
----
+- **Authentication**: Email/password signup, sign-in, session cookies, and protected API routes via Better Auth.  
+- **Database Layer**: PostgreSQL with Drizzle ORM. Schemas for `users`, `chat_sessions`, and `messages`.  
+- **AI Chat API Route**: `/app/api/chat/route.ts` that receives prompts, calls `@ai-sdk`, streams LLM responses, and persists data.  
+- **Chat UI**: An `assistant-ui` component embedded in a Next.js page that handles streaming, error states, and loading indicators.  
+- **Conversation Management**: Sidebar listing past chat sessions; clicking one loads its messages.  
+- **UI Framework**: Tailwind CSS v4 + `shadcn/ui` for buttons, cards, input fields, modals, and dark mode toggle.  
+- **State Management**: Local state or lightweight library (Zustand/Jotai) for streaming updates and loading flags.  
+- **Containerization**: Docker Compose with services for Next.js app and Postgres DB.
 
 ## 5. Tech Stack & Tools
 
-- **Framework**: Next.js (App Router) for file-based routing, SSR/SSG, and API routes.
-- **Language**: TypeScript for type safety.
-- **UI Library**: React 18 for component-based UI.
-- **Styling**: Plain CSS via `globals.css` (global reset) and `theme.css` (sectional styling). Can easily migrate to CSS Modules or Tailwind in the future.
-- **Backend**: Node.js runtime provided by Next.js API routes.
-- **Password Hashing**: bcrypt (npm package).
-- **Session/JWT**: NextAuth.js or custom JWT logic (to be decided in implementation).
-- **IDE & Dev Tools**: VS Code with ESLint, Prettier extensions. Optionally, Cursor.ai for AI-assisted coding.
-
----
+- **Frontend Framework**: Next.js 15 (App Router) with Turbopack; React components for client UI.  
+- **Language**: TypeScript for end-to-end type safety.  
+- **Authentication**: Better Auth for secure email/password flows.  
+- **Database & ORM**: PostgreSQL + Drizzle ORM (TypeScript-first).  
+- **AI Integration**: Vercel `@ai-sdk` to call LLM providers (OpenAI, Anthropic).  
+- **UI Components**: `shadcn/ui` primitives, `assistant-ui` for chat interface.  
+- **Styling**: Tailwind CSS v4 with dark mode support.  
+- **State Management**: Zustand or Jotai (for streaming and conversation state).  
+- **Data Fetching**: React Query or SWR for chat history and optimistic updates.  
+- **Containerization**: Docker & Docker Compose.  
+- **IDE Tools**: VS Code with ESLint, Prettier, TypeScript extensions. Optionally Windsurf plugin for AI-assisted code completions.
 
 ## 6. Non-Functional Requirements
 
-- **Performance**: Initial page load under 200 ms on a standard broadband connection. API responses under 300 ms.
-- **Security**:
-  - HTTPS only in production.
-  - Proper CORS, CSRF protection for API routes.
-  - Secure password storage (bcrypt with salt).
-  - No credentials or secrets checked into version control.
-- **Scalability**: Structure must support adding database integration, caching layers, and advanced auth flows without rewiring core app.
-- **Usability**: Forms should give real-time feedback on invalid input. Layout must be responsive (mobile > 320 px).
-- **Maintainability**: Code must adhere to TypeScript strict mode. Linting & formatting enforced by ESLint/Prettier.
-
----
+- **Performance**: Chat messages should start streaming within 500 ms of request.  
+- **Scalability**: The architecture must support horizontal scaling of the Next.js server and multiple DB connections.  
+- **Security**:  
+  - Sensitive secrets (API keys) only in environment variables; never exposed to client.  
+  - HTTPS encryption, secure cookies with `HttpOnly` and `Secure` flags.  
+- **Data Integrity**: Ensure ACID compliance via Postgres; transactional writes for multi-table inserts.  
+- **Usability**:  
+  - Mobile-friendly layout.  
+  - Accessible (ARIA attributes, keyboard nav).  
+- **Reliability**:  
+  - 99.9% API uptime.  
+  - Automatic retries for transient AI SDK or DB failures (with exponential backoff).
 
 ## 7. Constraints & Assumptions
 
-- **No Database**: Dashboard uses only `data.json`; real database integration is deferred.
-- **Node Version**: Requires Node.js >= 14.
-- **Next.js Version**: Built on Next.js 13+ App Router.
-- **Authentication**: Assumes availability of bcrypt or NextAuth.js at implementation time.
-- **Hosting**: Targets serverless or Node.js-capable hosting (e.g., Vercel, Netlify).
-- **Browser Support**: Modern evergreen browsers; no IE11 support required.
-
----
+- **GPT-4o Availability**: Assumes the chosen LLM API (e.g., OpenAI) is available and supports streaming.  
+- **Environment**: Node.js 20+, Docker installed locally for dev and CI.  
+- **Secrets Management**: Developers have `OPENAI_API_KEY` (or equivalent) in `.env`.  
+- **Database Migrations**: Will use Drizzle’s migration tooling; assumes Postgres >= 13.  
+- **Hosting**: Target Vercel or a container-friendly cloud provider (e.g., AWS ECS, DigitalOcean App Platform).
 
 ## 8. Known Issues & Potential Pitfalls
 
-- **Static Data Limitation**: `data.json` is only for demo. A real API or database will be needed to avoid stale data.
-  *Mitigation*: Define a clear interface for data fetching so swapping to a live endpoint is trivial.
-
-- **Global CSS Conflicts**: Using global styles can lead to unintended overrides.
-  *Mitigation*: Plan to migrate to CSS Modules or utility-first CSS in Phase 2.
-
-- **API Route Ambiguity**: Single `/api/auth/route.ts` handling both sign-up and sign-in could get complex.
-  *Mitigation*: Clearly branch on HTTP method (`POST /register` vs. `POST /login`) or split into separate files.
-
-- **Lack of Testing**: No test suite means regressions can slip in.
-  *Mitigation*: Build a minimal Jest + React Testing Library setup in an early iteration.
-
-- **Error Handling Gaps**: Client and server must handle edge cases (network failures, malformed input).
-  *Mitigation*: Define a standard error response schema and show user-friendly messages.
+- **API Rate Limits**: LLM providers often throttle requests. Mitigation: Implement client-side rate limiting and server queueing.  
+- **Streaming Interruptions**: Network glitches can break streaming. Mitigation: Use library features to resume or retry partial streams.  
+- **Large Conversation Growth**: Unlimited messages lead to slow queries. Mitigation: Add pagination or archive old chats.  
+- **State Bloat**: Holding full message history in client state can cause memory issues. Mitigation: Cache only recent messages and fetch older ones on demand.  
+- **CORS & CSRF**: Incorrectly configured headers can block API calls or allow CSRF attacks. Mitigation: Use Next.js built-in protections and strict CORS settings.
 
 ---
 
-This PRD should serve as the single source of truth for the AI model or any developer generating the next set of technical documents: Tech Stack Doc, Frontend Guidelines, Backend Structure, App Flow, File Structure, and IDE Rules. It contains all functional and non-functional requirements with no ambiguity, enabling seamless downstream development.
+This PRD provides a clear, unambiguous blueprint for building the first version of the Superchat AI platform. All subsequent technical documents (tech stack details, frontend/backend guidelines, file structure) should reference these requirements directly.
