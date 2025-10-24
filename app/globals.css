@@ -121,3 +121,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* AI Button Active States */
+@layer utilities {
+  .ai-button-active {
+    @apply bg-primary text-primary-foreground border-primary hover:bg-primary/90;
+  }
+
+  /* Responsive button visibility for AI features */
+  .ai-feature-buttons {
+    @apply flex items-center gap-2;
+  }
+
+  /* Ensure proper spacing and layout in sidebar */
+  .sidebar-nav-item {
+    @apply transition-all duration-200 ease-in-out;
+  }
+}
